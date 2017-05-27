@@ -8,6 +8,7 @@
 
 #include <string>
 #include <sstream>
+#include <mpi.h>
 
 #include "time_evaluating.cpp"
 
@@ -112,6 +113,11 @@ map<string, string> read_config(string filename) {
 
 int main()
 {
+//    MPI_Init(&argc, &argv);
+//    MPI_Comm_size(MPI_COMM_WORLD, &commsize);
+//    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+//    MPI_Get_processor_name(procname, &len);
+
     string filename;
     cout << "Please enter name of configuration file with extension '.txt':";
     cin >> filename;
