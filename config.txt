@@ -1,0 +1,8 @@
+absol_er=1E-3
+rel_er=1E-3
+threads=30
+x0=0
+x1=3
+y0=0
+y1=1
+m=5
