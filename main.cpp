@@ -96,25 +96,7 @@ map<string, string> read_config(string filename) {
     return mp;
 
 };
-double* getErrors(double x, double x1, int m, double pr){
-    double step1 = 1E-3;
-    double step2 = step1 / 2.0;
-    double integral1 = 0, integral2 = 0;
-    double j = x, l = x;
 
-    while (j < x1) {
-        integral1 += integration(j, j + step1, y0, y1, m, pr);
-        j += step1;
-    }
-
-    while (l < x1) {
-        integral2 += integration(l, l + step2, y0, y1, m, pr);
-        l += step2;
-    }
-
-    double abs_dif = abs(integral1 - integral2);
-    double rel_dif = abs((integral1 - integral2) / max(integral1, integral2));
-}
 
 int main()
 {
@@ -140,7 +122,23 @@ int main()
         double interval_x = (x1 - x0) / num_of_threads;
         double x = x0;
         cout << "  Calculating...\n" << endl;
+        double step1 = 1E-3;
+        double step2 = step1 / 2.0;
+        double integral1 = 0, integral2 = 0;
+        double j = x, l = x;
 
+        while (j < x1) {
+            integral1 += integration(j, j + step1, y0, y1, m, pr);
+            j += step1;
+        }
+
+        while (l < x1) {
+            integral2 += integration(l, l + step2, y0, y1, m, pr);
+            l += step2;
+        }
+
+        double abs_dif = abs(integral1 - integral2);
+        double rel_dif = abs((integral1 - integral2) / max(integral1, integral2));
 
         if (abs_dif <= abs_er)
             cout << "| Absolute error is okay\t";
