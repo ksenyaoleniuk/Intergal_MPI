@@ -13,14 +13,14 @@ using namespace std;
 
 mutex mx;
 
+//Моя формула закоментована, оскільки ми робили з Оксаною, ми використовували її функцію.
 double func_calculation(int m, double x1, double x2) {
 //    double sum1 = 0;
 //    double sum2 = 0;
 //    double g;
 //    for (int i = 1; i <= m; ++i)
 //    {
-//        sum1 += i * cos((i + 1) * x1 + 1);
-//        sum2 += i * cos((i + 1) * x2 + 1);
+//        sum1 = c(i)*(exp(-1/pi·sum((x-A(i))^2))·cos(pi·sum((x-A(i))^2)))
 //    }
 //
 //    g = - sum1 * sum2;
@@ -173,7 +173,6 @@ int main() {
         additionalInf << "Absolute error: " << abs_dif << endl;
         additionalInf << "Relative error: " << rel_dif << endl;
         result << total_time.count() << endl;
-
     }
     return 0;
 }
