@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include <math.h>
+#include <cmath>
 #include <assert.h>
 #include <mutex>
 #include <thread>
