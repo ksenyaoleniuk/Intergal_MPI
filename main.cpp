@@ -163,12 +163,13 @@ int main() {
 
         cout << "Absolute error: real vs desirable - " << abs_dif << " vs " << abs_er << endl;
         cout << "Relative error: real vs desirable - " << rel_dif << " vs " << rel_er << endl;
+        cout << "Result: " << integral << endl;
         cout << "Total time: " << to_us(total_time) << endl;
 
         ofstream result, additionalInf;
         result.open("result.txt");
         additionalInf.open("additionInf.txt");
-        additionalInf << "Integral: " <<integral << endl;
+        additionalInf << "Integral: " << integral << endl;
         additionalInf << "Absolute error: " << abs_dif << endl;
         additionalInf << "Relative error: " << rel_dif << endl;
         result << total_time.count() << endl;
