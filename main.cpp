@@ -6,9 +6,6 @@
 #include <thread>
 #include <map>
 #include <sstream>
-//#include <mpi.h>
-
-#include "time_evaluating.cpp"
 
 using namespace std;
 
@@ -27,8 +24,8 @@ inline long long to_us(const D& d)
 {
     return std::chrono::duration_cast<chrono::microseconds>(d).count();
 }
-
-double func_calculation(int m, double x1, double x2) {
+//Write my func
+double func_calculation(double x1, double x2, int m) {
 //    double sum1 = 0;
 //    double sum2 = 0;
 //    double g;
@@ -41,7 +38,7 @@ double func_calculation(int m, double x1, double x2) {
 //    g = - sum1 * sum2;
 //
 //    return g;
-    double g,sum;
+    double g,sum = 0.0;
     int j;
     for (int i = -2; i <= 2; ++i)
     {
@@ -58,19 +55,15 @@ double func_calculation(int m, double x1, double x2) {
 double integration(double x0, double x, double y0, double y, int m, double pr) {
     assert (m >= 5);
     double sum = 0;
-    for (double i = x0; i <= x; i += pr) {
-        for (double j = y0; j <= y; j += pr) {
-            sum += func_calculation(m, i + pr / 2.0, j + pr / 2.0) * pr * pr;
-        }
-    }
+    for (double i = x0; i <= x; i += pr) for (double j = y0; j <= y; j += pr)
+            sum += func_calculation(i + pr / 2.0, j + pr / 2.0, m) * pr * pr;
     return sum;
 }
 
-void thread_integration(double x0, double x, double y0, double y, int m, double pr, double* r) {
-
-    auto result = integration(x0, x, y0, y, m, pr);
+void integrateWithThreads(double x0, double x, double y0, double y, int m, double pr, double *r) {
+    double integAnswer = integration(x0, x, y0, y, m, pr);
     lock_guard<mutex> lg(mx);
-    *r += result;
+    *r += integAnswer;
 }
 
 template <class T>
@@ -85,10 +78,7 @@ map<string, string> read_config(string filename) {
     string line, delimiter;
     ifstream myfile (filename);
     map<string, string> mp;
-
     delimiter = "=";
-
-
     if (myfile.is_open())
     {
         while (getline(myfile,line))
@@ -98,28 +88,37 @@ map<string, string> read_config(string filename) {
             string value = line.substr(pos + 1);
             mp[key] = value;
         }
-
         myfile.close();
     }
     else {
-        cout << "Error with opening the file!" << endl;
+        cout << "Cannot open the file!" << endl;
     }
     return mp;
 
 };
+double* getErrors(double x, double x1, int m, double pr){
+    double step1 = 1E-3;
+    double step2 = step1 / 2.0;
+    double integral1 = 0, integral2 = 0;
+    double j = x, l = x;
 
+    while (j < x1) {
+        integral1 += integration(j, j + step1, y0, y1, m, pr);
+        j += step1;
+    }
+
+    while (l < x1) {
+        integral2 += integration(l, l + step2, y0, y1, m, pr);
+        l += step2;
+    }
+
+    double abs_dif = abs(integral1 - integral2);
+    double rel_dif = abs((integral1 - integral2) / max(integral1, integral2));
+}
 
 int main()
 {
-//    MPI_Init(&argc, &argv);
-//    MPI_Comm_size(MPI_COMM_WORLD, &commsize);
-//    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-//    MPI_Get_processor_name(procname, &len);
-
     string filename;
-//    cout << "Please enter name of configuration file with extension '.txt':";
-//    cin >> filename;
-
     filename = "config.txt";
     map<string, string> mp = read_config(filename);
     double abs_er, rel_er, x0, x1, y0, y1;
@@ -133,7 +132,7 @@ int main()
         y1 = get_param<double>("y1", mp);
         m = get_param<int>("m", mp);
         num_of_threads = get_param<int>("threads", mp);
-
+        cout << "ASD: " << num_of_threads << endl;
         thread threads[num_of_threads];
         double pr = 1E-3;
 
@@ -141,23 +140,7 @@ int main()
         double interval_x = (x1 - x0) / num_of_threads;
         double x = x0;
         cout << "  Calculating...\n" << endl;
-        double step1 = 1E-3;
-        double step2 = step1 / 2.0;
-        double integral1 = 0, integral2 = 0;
-        double j = x, l = x;
 
-        while (j < x1) {
-            integral1 += integration(j, j + step1, y0, y1, m, pr);
-            j += step1;
-        }
-
-        while (l < x1) {
-            integral2 += integration(l, l + step2, y0, y1, m, pr);
-            l += step2;
-        }
-
-        double abs_dif = abs(integral1 - integral2);
-        double rel_dif = abs((integral1 - integral2) / max(integral1, integral2));
 
         if (abs_dif <= abs_er)
             cout << "| Absolute error is okay\t";
@@ -174,33 +157,26 @@ int main()
 
         auto start_time_reading = get_current_time_fenced();
         for (int i = 0; i < num_of_threads; ++i) {
-            threads[i] = thread(thread_integration, x, x + interval_x, y0, y1, m, pr, &integral);
+            threads[i] = thread(integrateWithThreads, x, x + interval_x, y0, y1, m, pr, &integral);
             x += interval_x;
         }
 
-        for (int j = 0; j < num_of_threads; ++j) {
-            threads[j].join();
-        }
+        for (int i = 0; i < num_of_threads; ++i) threads[i].join();
 
         auto finish_time = get_current_time_fenced();
         auto total_time = finish_time - start_time_reading;
-//        chrono::duration<double, milli> the_time = total_time;
+
         cout << " -------------------------------------\n| Time: " << to_us(total_time)
              << " ms\n -------------------------------------" << endl;
-
-        double integ = integration(x0, x1, y0, y1, m, pr);
-        ofstream result;
+        ofstream result, additionalInfo;
         result.open("result.txt");
+        additionalInfo.open("additionalInfo.txt");
               result << integral << endl;
-//            result << "| Threads result: " << integral << "\n|-----------------------------" << endl;
-//            result << "| Function result: " << integ << "\n|-----------------------------" << endl;
-//            result << "| Absolute error: " << abs_dif << endl;
-//            result << "| Relative error: " << rel_dif << "\n|-----------------------------" << endl;
-//            result << "| Time: " << total_time.count() << " ms\n -----------------------------" << endl;
+        additionalInfo << "| Absolute error: " << abs_dif << endl;
+        additionalInfo << "| Relative error: " << rel_dif << "\n|-----------------------------" << endl;
+        additionalInfo << "| Total time: " << total_time.count() << " ms\n -----------------------------" << endl;
 
-//        cout << "\t|  THREADS result: " << integral << endl;
-//        cout << "\t|-----------------------------\n";
-//        cout << "\t| FUNCTION result: " << integ << "\n\t -----------------------------" << endl;
+        additionalInfo << "\t|  Threads counted: " << integral << endl;
     }
     return 0;
 }
