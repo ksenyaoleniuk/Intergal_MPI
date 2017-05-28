@@ -8,7 +8,7 @@
 
 #include <string>
 #include <sstream>
-#include <mpi.h>
+//#include <mpi.h>
 
 #include "time_evaluating.cpp"
 
@@ -119,9 +119,9 @@ int main()
 //    MPI_Get_processor_name(procname, &len);
 
     string filename;
-    cout << "Please enter name of configuration file with extension '.txt':";
-    cin >> filename;
-//    filename = "config.txt";
+//    cout << "Please enter name of configuration file with extension '.txt':";
+//    cin >> filename;
+    filename = "config.txt";
     map<string, string> mp = read_config(filename);
     double abs_er, rel_er, x0, x1, y0, y1;
     int m, num_of_threads;
@@ -192,15 +192,16 @@ int main()
         double integ = integration(x0, x1, y0, y1, m, pr);
         ofstream result;
         result.open("result.txt");
-            result << "| Threads result: " << integral << "\n|-----------------------------" << endl;
-            result << "| Function result: " << integ << "\n|-----------------------------" << endl;
-            result << "| Absolute error: " << abs_dif << endl;
-            result << "| Relative error: " << rel_dif << "\n|-----------------------------" << endl;
-            result << "| Time: " << total_time.count() << " ms\n -----------------------------" << endl;
+              result << integral << endl;
+//            result << "| Threads result: " << integral << "\n|-----------------------------" << endl;
+//            result << "| Function result: " << integ << "\n|-----------------------------" << endl;
+//            result << "| Absolute error: " << abs_dif << endl;
+//            result << "| Relative error: " << rel_dif << "\n|-----------------------------" << endl;
+//            result << "| Time: " << total_time.count() << " ms\n -----------------------------" << endl;
 
-        cout << "\t|  THREADS result: " << integral << endl;
-        cout << "\t|-----------------------------\n";
-        cout << "\t| FUNCTION result: " << integ << "\n\t -----------------------------" << endl;
+//        cout << "\t|  THREADS result: " << integral << endl;
+//        cout << "\t|-----------------------------\n";
+//        cout << "\t| FUNCTION result: " << integ << "\n\t -----------------------------" << endl;
     }
     return 0;
 }
